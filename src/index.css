@@ -76,8 +76,23 @@ body {
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  background-color: #f8fafc;
-  /* Subtle background for desktop/iPad */
+  background-color: var(--bg-main);
+}
+
+/* PWA / Standalone fullscreen: remove panel centering, fill screen */
+@media (display-mode: standalone) {
+  #root {
+    align-items: stretch;
+  }
+
+  .app-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: 100dvh !important;
+    border-radius: 0 !important;
+    border: none !important;
+    margin: 0 !important;
+  }
 }
 
 /* Mobile/Tablet App Container */

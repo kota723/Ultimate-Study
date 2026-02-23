@@ -67,6 +67,9 @@ export interface ClassSchedule {
     startTime: string; // HH:mm
     endTime: string; // HH:mm
     deletedDates: string[]; // YYYY-MM-DD of skipped days
+    room?: string;
+    teacher?: string;
+    memo?: string;
 }
 
 export interface Assignment {

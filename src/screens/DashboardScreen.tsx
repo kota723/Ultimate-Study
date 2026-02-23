@@ -9,7 +9,7 @@ const DashboardScreen: React.FC = () => {
     const {
         studyLogs, schedules, classSchedules, assignments, examEvents, toggleAssignment, addAssignment, deleteAssignment, deleteExamEvent,
         setActiveTab, user, signOut, userProfile, updateProfile, addExamEvent,
-        setWeeklyTarget, fetchSchoolData, applySchoolProgram, saveSchoolData
+        setWeeklyTarget, fetchSchoolData, applySchoolProgram, saveSchoolData, updateClassSchedule
     } = useAppContext();
 
     const [showSettings, setShowSettings] = useState(false);
@@ -56,6 +56,13 @@ const DashboardScreen: React.FC = () => {
     const [isLoadingSchool, setIsLoadingSchool] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [showWeeklyClasses, setShowWeeklyClasses] = useState(true);
+
+    // Class edit modal state
+    const [editingClass, setEditingClass] = useState<typeof classSchedules[0] | null>(null);
+    const [editClassTitle, setEditClassTitle] = useState('');
+    const [editClassRoom, setEditClassRoom] = useState('');
+    const [editClassTeacher, setEditClassTeacher] = useState('');
+    const [editClassMemo, setEditClassMemo] = useState('');
 
     // Toast Notification
     const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
@@ -810,19 +817,49 @@ const DashboardScreen: React.FC = () => {
                     </div>
                 </div>
                 <div className="flex-col" style={{ gap: '12px' }}>
-                    {todaySchedules.length > 0 ? todaySchedules.map(schedule => (
-                        <div key={schedule.id} className="card flex-row" style={{ padding: '16px', margin: 0, borderRadius: '20px', opacity: (schedule as any).isDimmed ? 0.4 : 1 }}>
-                            <div style={{ width: '4px', height: '40px', background: schedule.type === '授業' ? 'var(--secondary)' : schedule.type === '予定' ? 'var(--warning)' : 'var(--primary)', borderRadius: '2px' }} />
-                            <div style={{ flex: 1 }}>
-                                <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem' }}>{schedule.title}</h4>
-                                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                    {schedule.startTime} - {schedule.endTime} | <span className={schedule.type === '授業' ? 'badge badge-purple' : schedule.type === '予定' ? 'badge badge-orange' : 'badge badge-blue'} style={{ padding: '2px 6px', fontSize: '0.65rem' }}>{schedule.type}</span>
-                                    {(schedule as any).isClassSchedule && <span style={{ marginLeft: '8px', color: 'var(--primary)', fontWeight: 600 }}>(学校連携)</span>}
-                                    {(schedule as any).isDimmed && <span style={{ marginLeft: '8px', fontStyle: 'italic' }}>(未履修)</span>}
-                                </p>
+                    {todaySchedules.length > 0 ? todaySchedules.map(schedule => {
+                        const isClass = (schedule as any).isClassSchedule;
+                        const classData = isClass ? classSchedules.find(c => {
+                            // match by title and time
+                            return c.title.split('@')[0].trim() === schedule.title.split('@')[0].trim() &&
+                                c.startTime === schedule.startTime;
+                        }) : null;
+
+                        return (
+                            <div
+                                key={schedule.id}
+                                className="card flex-row"
+                                style={{ padding: '16px', margin: 0, borderRadius: '20px', opacity: (schedule as any).isDimmed ? 0.4 : 1, cursor: isClass ? 'pointer' : 'default', transition: 'all 0.2s' }}
+                                onClick={() => {
+                                    if (isClass && classData) {
+                                        setEditingClass(classData);
+                                        setEditClassTitle(classData.title.split('@')[0].trim());
+                                        setEditClassRoom(classData.room || (classData.title.includes('@') ? classData.title.split('@')[1].split(',')[0].trim() : ''));
+                                        setEditClassTeacher(classData.teacher || (classData.title.includes(',') ? classData.title.split(',')[1].trim() : ''));
+                                        setEditClassMemo(classData.memo || '');
+                                    }
+                                }}
+                            >
+                                <div style={{ width: '4px', height: '100%', minHeight: '40px', background: schedule.type === '授業' ? 'var(--secondary)' : schedule.type === '予定' ? 'var(--warning)' : 'var(--primary)', borderRadius: '2px' }} />
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem' }}>{schedule.title.split('@')[0]}</h4>
+                                        {isClass && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '2px' }}>タップで編集</span>}
+                                    </div>
+                                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                        {schedule.startTime} - {schedule.endTime} | <span className={schedule.type === '授業' ? 'badge badge-purple' : schedule.type === '予定' ? 'badge badge-orange' : 'badge badge-blue'} style={{ padding: '2px 6px', fontSize: '0.65rem' }}>{schedule.type}</span>
+                                        {(schedule as any).isClassSchedule && <span style={{ marginLeft: '8px', color: 'var(--primary)', fontWeight: 600 }}>(学校連携)</span>}
+                                        {(schedule as any).isDimmed && <span style={{ marginLeft: '8px', fontStyle: 'italic' }}>(未履修)</span>}
+                                    </p>
+                                    {classData?.memo && (
+                                        <p style={{ margin: '6px 0 0 0', fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            📝 {classData.memo}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    )) : <p style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>予定はありません</p>}
+                        );
+                    }) : <p style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>予定はありません</p>}
                 </div>
             </div>
 
@@ -1232,7 +1269,71 @@ const DashboardScreen: React.FC = () => {
             )}
 
             {/* Monday Goal Update Popup */}
+            {/* Class Edit Modal */}
+            {editingClass && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(5px)', zIndex: 9600, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0' }}
+                    onClick={(e) => { if (e.target === e.currentTarget) setEditingClass(null); }}
+                >
+                    <div className="card flex-col" style={{ width: '100%', maxWidth: 'min(768px, 100vw)', margin: 0, borderRadius: '32px 32px 0 0', padding: '28px 24px', gap: '20px', paddingBottom: 'max(28px, env(safe-area-inset-bottom))' }}>
+                        {/* Header */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.3rem' }}>📚</div>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 900 }}>授業を編集</h3>
+                                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>{editingClass.startTime} - {editingClass.endTime}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setEditingClass(null)} style={{ background: 'var(--bg-main)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>✕</button>
+                        </div>
+
+                        {/* Inputs */}
+                        <div className="input-group">
+                            <label className="input-label">授業名</label>
+                            <input className="input-field" type="text" value={editClassTitle} onChange={e => setEditClassTitle(e.target.value)} placeholder="例: 数学" />
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <div className="input-group">
+                                <label className="input-label">教室</label>
+                                <input className="input-field" type="text" value={editClassRoom} onChange={e => setEditClassRoom(e.target.value)} placeholder="例: 301" />
+                            </div>
+                            <div className="input-group">
+                                <label className="input-label">先生</label>
+                                <input className="input-field" type="text" value={editClassTeacher} onChange={e => setEditClassTeacher(e.target.value)} placeholder="例: 田中先生" />
+                            </div>
+                        </div>
+                        <div className="input-group">
+                            <label className="input-label">📝 メモ（次回の持ち物など）</label>
+                            <textarea className="input-field" rows={3} value={editClassMemo} onChange={e => setEditClassMemo(e.target.value)} placeholder="例: 教科書・プリント忘れずに！" style={{ resize: 'none', lineHeight: 1.5 }} />
+                        </div>
+
+                        {/* Save */}
+                        <button
+                            className="btn btn-primary"
+                            style={{ padding: '16px', borderRadius: '18px', fontWeight: 800, fontSize: '1rem' }}
+                            onClick={() => {
+                                const newTitle = editClassRoom
+                                    ? `${editClassTitle} @ ${editClassRoom}${editClassTeacher ? ', ' + editClassTeacher : ''}`
+                                    : editClassTitle;
+                                updateClassSchedule(editingClass.id, {
+                                    title: newTitle,
+                                    room: editClassRoom,
+                                    teacher: editClassTeacher,
+                                    memo: editClassMemo
+                                });
+                                setEditingClass(null);
+                                setToast({ message: '授業情報を更新しました', type: 'success' });
+                                setTimeout(() => setToast(null), 3000);
+                            }}
+                        >
+                            保存する
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {showGoalPopup && (
+
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
                     <div className="card flex-col" style={{ width: '100%', maxWidth: '360px', borderRadius: '32px', padding: '32px', gap: '20px', textAlign: 'center' }}>
                         <div style={{ fontSize: '3rem' }}>🎯</div>

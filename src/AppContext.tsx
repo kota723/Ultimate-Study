@@ -58,6 +58,7 @@ interface AppState {
     addBook: (title: string) => void;
     addCategory: (category: string) => void;
     addClassSchedule: (classSched: Omit<ClassSchedule, 'id' | 'deletedDates'>) => void;
+    updateClassSchedule: (id: string, updates: Partial<ClassSchedule>) => void;
     deleteClassScheduleInstance: (id: string, dateStr: string) => void;
     deleteClassScheduleEntirely: (id: string) => void;
     addAssignment: (assignment: Omit<Assignment, 'id' | 'createdAt'>) => void;
@@ -618,6 +619,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const deleteClassScheduleEntirely = (id: string) => {
         setClassSchedules(prev => prev.filter(c => c.id !== id));
     };
+    const updateClassSchedule = (id: string, updates: Partial<ClassSchedule>) => {
+        setClassSchedules(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+    };
 
     const addAssignment = (assignment: Omit<Assignment, 'id' | 'createdAt'>) => {
         setAssignments(prev => [...prev, { ...assignment, id: `assn-${Date.now()}`, createdAt: Date.now() }]);
@@ -776,7 +780,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             addStudyLog, updateStudyLog, deleteStudyLog, addLikeToLog, addCommentToLog, clearNotification,
             addSchedule, updateSchedule, deleteSchedule, addExamEvent, updateExamEvent, deleteExamEvent, updateExamSubjectScore,
             addBook, addCategory,
-            addClassSchedule, deleteClassScheduleInstance, deleteClassScheduleEntirely,
+            addClassSchedule, updateClassSchedule, deleteClassScheduleInstance, deleteClassScheduleEntirely,
             addAssignment, toggleAssignment, deleteAssignment,
             fetchUserLogs, fetchUserProfiles,
             timerState, startGlobalTimer, stopGlobalTimer, resetGlobalTimer,
