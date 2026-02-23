@@ -108,8 +108,8 @@ function App() {
             .login-screen-v2 {
                 position: fixed;
                 top: 0; left: 0; right: 0; bottom: 0;
-                background-color: #ffffff;
-                color: #0f172a;
+                background-color: var(--bg-main);
+                color: var(--text-main);
                 font-family: 'Outfit', sans-serif;
                 overflow-x: hidden;
                 overflow-y: auto;
@@ -193,13 +193,13 @@ function App() {
                 font-weight: 900;
                 letter-spacing: -0.5px;
                 line-height: 1;
-                color: #1e293b;
+                color: var(--text-main);
             }
 
             .brand-sub {
                 font-size: clamp(0.9rem, 2vw, 1.1rem);
                 font-weight: 600;
-                color: #64748b;
+                color: var(--text-muted);
             }
 
             .login-content {
@@ -226,7 +226,7 @@ function App() {
                 line-height: 1.1;
                 margin-bottom: 24px;
                 letter-spacing: -1.5px;
-                color: #0f172a;
+                color: var(--text-main);
             }
 
             .gradient-text {
@@ -237,15 +237,15 @@ function App() {
 
             .hero-subtitle {
                 font-size: clamp(1rem, 2.5vw, 1.25rem);
-                color: #475569;
+                color: var(--text-muted);
                 max-width: 650px;
                 margin: 0 auto 40px auto;
                 line-height: 1.6;
             }
 
             .google-login-btn {
-                background: #0f172a;
-                color: white;
+                background: var(--text-main);
+                color: var(--bg-main);
                 border: none;
                 padding: clamp(14px, 3vh, 18px) clamp(20px, 5vw, 32px);
                 border-radius: 20px;
@@ -297,18 +297,18 @@ function App() {
             }
 
             .feature-card {
-                background: #f8fafc;
-                border: 1px solid #e2e8f0;
+                background: var(--bg-card);
+                border: 1px solid var(--border-light);
                 padding: 32px;
                 border-radius: 32px;
                 transition: all 0.3s ease;
+                box-shadow: var(--shadow-sm);
             }
 
             .feature-card:hover {
                 transform: translateY(-5px);
-                background: #ffffff;
-                box-shadow: 0 20px 40px rgba(0,0,0,0.05);
-                border-color: #cbd5e1;
+                box-shadow: var(--shadow-md);
+                border-color: var(--primary-light);
             }
 
             .feature-card:hover .icon-box {

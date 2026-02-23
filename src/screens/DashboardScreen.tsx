@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../AppContext';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
-import { BookOpen, Target, Settings, School as SchoolIcon, Layout, Trash2, Save, ChevronUp, Plus, ClipboardList, Calendar as CalendarIcon, CheckCircle2, Circle, Edit3, Wand2 } from 'lucide-react';
+import { BookOpen, Target, Settings, School as SchoolIcon, Layout, Trash2, Save, ChevronUp, Plus, ClipboardList, Calendar as CalendarIcon, CheckCircle2, Circle, Edit3, Wand2, Copy } from 'lucide-react';
 import { format, startOfWeek, subWeeks } from 'date-fns';
 import type { ScheduleType, School, SchoolProgram, ExamSubject } from '../types';
 
@@ -273,6 +273,28 @@ const DashboardScreen: React.FC = () => {
         setNewProgramName('');
     };
 
+    const handleDuplicateProgram = (programId: string) => {
+        const progToCopy = adminPrograms.find(p => p.id === programId);
+        if (!progToCopy) return;
+
+        const newName = prompt('新しく複製するクラス・コース名を入力してください', progToCopy.name + ' (コピー)');
+        if (!newName) return;
+
+        if (adminPrograms.some(p => p.name === newName)) {
+            alert('🚨 注意: 同じ名前のクラスが既に存在します！別の名前を指定するか、上書き保存の前に修正してください。');
+        }
+
+        const newProg: SchoolProgram = {
+            id: `prog-${Date.now()}`,
+            name: newName,
+            schedules: [...progToCopy.schedules],
+            exams: [...progToCopy.exams]
+        };
+        setAdminPrograms([...adminPrograms, newProg]);
+        setToast({ message: `「${progToCopy.name}」を複製しました`, type: 'success' });
+        setTimeout(() => setToast(null), 3000);
+    };
+
     const applyMitaTemplate = () => {
         setAdminSchoolName('MITA高校');
         setAdminSchoolCode('MITA-H1');
@@ -312,10 +334,46 @@ const DashboardScreen: React.FC = () => {
     };
     const toggleCellSelection = (day: number, period: number) => {
         const exists = selectedCells.find(c => c.day === day && c.period === period);
+        let newSelected;
         if (exists) {
-            setSelectedCells(selectedCells.filter(c => !(c.day === day && c.period === period)));
+            newSelected = selectedCells.filter(c => !(c.day === day && c.period === period));
         } else {
-            setSelectedCells([...selectedCells, { day, period }]);
+            newSelected = [...selectedCells, { day, period }];
+        }
+        setSelectedCells(newSelected);
+
+        if (newSelected.length === 1 && editingProgramId) {
+            const prog = adminPrograms.find(p => p.id === editingProgramId);
+            if (prog) {
+                const periodInfo = periods.find(p => p.id === newSelected[0].period);
+                if (periodInfo) {
+                    const sched = prog.schedules.find(s => s.dayOfWeek === newSelected[0].day && s.startTime === periodInfo.start);
+                    if (sched) {
+                        let subject = sched.title;
+                        let room = '';
+                        let teacher = '';
+                        if (subject.includes(' @ ')) {
+                            const parts = subject.split(' @ ');
+                            subject = parts[0];
+                            const rest = parts[1];
+                            if (rest.includes(', ')) {
+                                const restParts = rest.split(', ');
+                                room = restParts[0];
+                                teacher = restParts[1];
+                            } else {
+                                room = rest;
+                            }
+                        } else if (subject.includes(', ')) {
+                            const parts = subject.split(', ');
+                            subject = parts[0];
+                            teacher = parts[1];
+                        }
+                        setBulkSubject(subject);
+                        setBulkRoom(room);
+                        setBulkTeacher(teacher);
+                    }
+                }
+            }
         }
     };
 
@@ -1056,9 +1114,19 @@ const DashboardScreen: React.FC = () => {
                                     <div key={prog.id} className="card flex-col" style={{ gap: '12px', border: editingProgramId === prog.id ? '2px solid var(--primary)' : '1px solid var(--border-light)', borderRadius: '24px' }}>
                                         <div className="row-between">
                                             <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>{prog.name}</h4>
-                                            <button onClick={() => setEditingProgramId(editingProgramId === prog.id ? null : prog.id)} className="btn" style={{ background: 'var(--bg-main)', padding: '10px' }}>
-                                                <Edit3 size={20} />
-                                            </button>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button onClick={() => setEditingProgramId(editingProgramId === prog.id ? null : prog.id)} className="btn" style={{ background: 'var(--bg-main)', padding: '10px' }}>
+                                                    <Edit3 size={18} />
+                                                </button>
+                                                <button onClick={() => handleDuplicateProgram(prog.id)} className="btn" style={{ background: 'var(--primary-light)15', color: 'var(--primary)', padding: '10px' }}>
+                                                    <Copy size={18} />
+                                                </button>
+                                                <button onClick={() => {
+                                                    if (confirm('本当に削除しますか？')) setAdminPrograms(adminPrograms.filter(p => p.id !== prog.id));
+                                                }} className="btn" style={{ background: 'var(--danger)15', color: 'var(--danger)', padding: '10px' }}>
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
                                         </div>
 
                                         {editingProgramId === prog.id && (

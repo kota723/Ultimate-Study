@@ -686,14 +686,56 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const program = school.programs.find(p => p.id === programId);
         if (!program) return;
 
-        const newClassSchedules: ClassSchedule[] = program.schedules.map((s, idx) => ({
-            id: `school-class-${idx}-${Date.now()}`,
-            title: s.title,
-            dayOfWeek: s.dayOfWeek || 0,
-            startTime: s.startTime,
-            endTime: s.endTime,
-            deletedDates: []
-        }));
+        const newClassSchedules: ClassSchedule[] = program.schedules.map((s, idx) => {
+            let finalTitle = s.title;
+
+            if (electiveChoices && electiveChoices[finalTitle] !== undefined) {
+                if (finalTitle.includes('/')) {
+                    const choice = electiveChoices[finalTitle];
+                    if (typeof choice === 'string') {
+                        const mainSplit = finalTitle.split(' @ ');
+                        const options = mainSplit[0].split('/').map(p => p.trim());
+                        const choiceIndex = options.indexOf(choice);
+
+                        if (choiceIndex !== -1) {
+                            let newTitle = choice;
+                            if (mainSplit.length > 1) {
+                                let roomPart = mainSplit[1];
+                                let teacherPart = '';
+                                if (roomPart.includes(', ')) {
+                                    const p = roomPart.split(', ');
+                                    roomPart = p[0];
+                                    teacherPart = p[1];
+                                }
+
+                                const roomOptions = roomPart.split('/').map(r => r.trim());
+                                const newRoom = roomOptions[choiceIndex] || roomOptions[0] || '';
+
+                                const teacherOptions = teacherPart.split('/').map(t => t.trim());
+                                const newTeacher = teacherOptions[choiceIndex] || teacherOptions[0] || '';
+
+                                newTitle += ` @ ${newRoom}`;
+                                if (newTeacher) newTitle += `, ${newTeacher}`;
+                            }
+                            finalTitle = newTitle;
+                        }
+                    }
+                } else if (finalTitle.includes('【')) {
+                    if (electiveChoices[finalTitle] === false) {
+                        return null; // Opted out of optional class
+                    }
+                }
+            }
+
+            return {
+                id: `school-class-${idx}-${Date.now()}`,
+                title: finalTitle,
+                dayOfWeek: s.dayOfWeek || 0,
+                startTime: s.startTime,
+                endTime: s.endTime,
+                deletedDates: []
+            };
+        }).filter(Boolean) as ClassSchedule[];
 
         setClassSchedules(prev => {
             const keepers = clearOld ? prev.filter(c => !c.id.startsWith('school-class-')) : prev;
