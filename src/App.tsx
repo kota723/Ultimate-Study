@@ -99,6 +99,8 @@ function App() {
         <style>{`
             .login-screen-v2 {
                 min-height: 100dvh;
+                height: 100dvh;
+                max-height: 100dvh;
                 width: 100vw;
                 background-color: #ffffff;
                 color: #0f172a;
