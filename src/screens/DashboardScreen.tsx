@@ -883,7 +883,7 @@ const DashboardScreen: React.FC = () => {
                                 </div>
                             )}
                             {upcomingAssignments.length > 0 ? upcomingAssignments.map(assn => (
-                                <div key={assn.id} className="card flex-row-between" style={{ padding: '14px 16px', margin: 0, borderRadius: '18px', background: 'white', transition: 'opacity 0.4s', opacity: assn.isCompleted ? 0.5 : 1 }}>
+                                <div key={assn.id} className="card flex-row-between" style={{ padding: '14px 16px', margin: 0, borderRadius: '18px', background: 'var(--bg-card)', transition: 'opacity 0.4s', opacity: assn.isCompleted ? 0.5 : 1 }}>
                                     <div className="flex-row" style={{ gap: '12px', flex: 1, minWidth: 0 }}>
                                         <button
                                             onClick={() => !assn.isCompleted && handleCompleteAssignment(assn.id)}
@@ -910,7 +910,7 @@ const DashboardScreen: React.FC = () => {
                 <button
                     onClick={() => setShowExamsList(!showExamsList)}
                     className="btn"
-                    style={{ width: '100%', justifyContent: 'space-between', background: 'white', border: '1px solid var(--border-light)', padding: '16px', borderRadius: '18px', color: 'var(--text-main)' }}
+                    style={{ width: '100%', justifyContent: 'space-between', background: 'var(--bg-card)', border: '1px solid var(--border-light)', padding: '16px', borderRadius: '18px', color: 'var(--text-main)' }}
                 >
                     <div className="flex-row" style={{ gap: '12px' }}>
                         <CalendarIcon size={20} color="#ec4899" />
@@ -930,11 +930,11 @@ const DashboardScreen: React.FC = () => {
                 {showExamsList && (
                     <div className="flex-col" style={{ gap: '10px', marginTop: '12px', padding: '4px' }}>
                         {upcomingExams.length > 0 ? upcomingExams.map(exam => (
-                            <div key={exam.id} className="card" style={{ padding: '14px 16px', margin: 0, borderRadius: '18px', background: 'linear-gradient(to right, #fdf2f8, #ffffff)', border: '1px solid #fce7f3' }}>
+                            <div key={exam.id} className="card" style={{ padding: '14px 16px', margin: 0, borderRadius: '18px', background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
                                 <div className="flex-row" style={{ gap: '12px' }}>
-                                    <div style={{ textAlign: 'center', padding: '0 10px', borderRight: '1px solid #fbcfe8', marginRight: '4px', flexShrink: 0 }}>
-                                        <span style={{ display: 'block', fontSize: '0.65rem', color: '#db2777', fontWeight: 800 }}>{format(new Date(exam.date), 'M月')}</span>
-                                        <span style={{ display: 'block', fontSize: '1.3rem', fontWeight: 900, color: '#9d174d' }}>{format(new Date(exam.date), 'd')}</span>
+                                    <div style={{ textAlign: 'center', padding: '0 10px', borderRight: '1px solid var(--border-light)', marginRight: '4px', flexShrink: 0 }}>
+                                        <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--secondary)', fontWeight: 800 }}>{format(new Date(exam.date), 'M月')}</span>
+                                        <span style={{ display: 'block', fontSize: '1.3rem', fontWeight: 900, color: 'var(--text-main)' }}>{format(new Date(exam.date), 'd')}</span>
                                     </div>
                                     <div style={{ flex: 1 }}>
                                         <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>{exam.title}</h4>
@@ -943,7 +943,7 @@ const DashboardScreen: React.FC = () => {
                                     <div className="flex-col" style={{ gap: '4px', justifyContent: 'center' }}>
                                         <button
                                             onClick={() => setActiveTab('stats')}
-                                            style={{ background: 'none', border: 'none', color: '#db2777', cursor: 'pointer', padding: '4px', opacity: 0.7 }}
+                                            style={{ background: 'none', border: 'none', color: 'var(--secondary)', cursor: 'pointer', padding: '4px', opacity: 0.7 }}
                                             title="分析画面で編集"
                                         >
                                             <Edit3 size={15} />

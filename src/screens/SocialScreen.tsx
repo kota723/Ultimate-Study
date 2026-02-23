@@ -35,6 +35,7 @@ const SocialScreen: React.FC = () => {
     const [isTimelineLoading, setIsTimelineLoading] = useState(true);
     const [activeCommentLogId, setActiveCommentLogId] = useState<string | null>(null);
     const [commentInput, setCommentInput] = useState('');
+    const [timelineRefreshKey, setTimelineRefreshKey] = useState(0);
 
     const getElapsedMins = (startTime?: number) => {
         if (!startTime) return 0;
@@ -76,7 +77,16 @@ const SocialScreen: React.FC = () => {
             }
         };
         loadTimeline();
-    }, [view, friends, studyLogs]); // Added studyLogs to dependencies
+    }, [view, friends, timelineRefreshKey]);
+
+    // Refresh timeline when view becomes timeline (only once per visit)
+    const prevViewRef = React.useRef(view);
+    useEffect(() => {
+        if (view === 'timeline' && prevViewRef.current !== 'timeline') {
+            setTimelineRefreshKey(k => k + 1);
+        }
+        prevViewRef.current = view;
+    }, [view]);
 
     const handleSearch = () => {
         if (!searchId) return;
