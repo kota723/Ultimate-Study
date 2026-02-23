@@ -101,7 +101,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [classSchedules, setClassSchedules] = useState<ClassSchedule[]>(() => loadSafe('classSchedules', []));
     const [assignments, setAssignments] = useState<Assignment[]>(() => loadSafe('assignments', []));
     const syncCacheRef = useRef<string>('');
-    const isReceivingFromFirestore = useRef(false);
 
     const [timerState, setTimerState] = useState<{ active: boolean; seconds: number; subject: string; startTime: number | null }>(() => {
         const saved = localStorage.getItem('study-sync-timer');
@@ -164,15 +163,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 const unDoc = onSnapshot(userDocRef, (s) => {
                     if (s.exists()) {
                         const d = s.data();
-                        isReceivingFromFirestore.current = true;
                         setUserProfile({ id: s.id, ...d } as UserProfile);
                         if (d.logs) setStudyLogs(d.logs);
                         if (d.schedules) setSchedules(d.schedules);
                         if (d.assignments) setAssignments(d.assignments);
                         if (d.classSchedules) setClassSchedules(d.classSchedules);
                         if (d.examEvents) setExamEvents(d.examEvents);
-                        // Reset the flag after a short delay to allow state to settle
-                        setTimeout(() => { isReceivingFromFirestore.current = false; }, 500);
+                        // Update syncCacheRef with incoming Firestore data so the
+                        // sync useEffect doesn't immediately write the same data back
+                        const incoming = {
+                            logs: d.logs || [],
+                            schedules: d.schedules || [],
+                            assignments: d.assignments || [],
+                            classSchedules: d.classSchedules || [],
+                            examEvents: d.examEvents || []
+                        };
+                        syncCacheRef.current = JSON.stringify(incoming);
                     }
                 });
 
@@ -226,7 +232,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, [userProfile?.friends]);
 
     useEffect(() => {
-        if (user && !isReceivingFromFirestore.current) {
+        if (user) {
             const dataToSync = {
                 logs: studyLogs,
                 schedules: schedules,
@@ -236,7 +242,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             };
             const serialized = JSON.stringify(dataToSync);
 
-            // Prevent infinite loop by checking if data actually changed
+            // Only write if data actually changed from last known state
             if (syncCacheRef.current !== serialized) {
                 syncCacheRef.current = serialized;
                 const userDocRef = doc(db, 'users', user.uid);

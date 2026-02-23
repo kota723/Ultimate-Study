@@ -67,6 +67,9 @@ const DashboardScreen: React.FC = () => {
     // Toast Notification
     const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
 
+    // Delete confirm modal
+    const [deleteConfirmAssignmentId, setDeleteConfirmAssignmentId] = useState<string | null>(null);
+
     // Grid Editor States
     const [selectedCells, setSelectedCells] = useState<{ day: number, period: number }[]>([]);
     const [bulkSubject, setBulkSubject] = useState('');
@@ -933,7 +936,7 @@ const DashboardScreen: React.FC = () => {
                                             <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--danger)', fontWeight: 700 }}>期限: {format(new Date(assn.dueDate), 'M/d')}{(assn as any).dueDetail || ''} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>| {assn.subject}</span></p>
                                         </div>
                                     </div>
-                                    <button onClick={() => deleteAssignment(assn.id)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '4px', opacity: 0.4, flexShrink: 0 }}>
+                                    <button onClick={() => setDeleteConfirmAssignmentId(assn.id)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '4px', opacity: 0.4, flexShrink: 0 }}>
                                         <Trash2 size={16} />
                                     </button>
                                 </div>
@@ -1268,8 +1271,33 @@ const DashboardScreen: React.FC = () => {
                 </div>
             )}
 
+            {/* Assignment Delete Confirm Modal */}
+            {deleteConfirmAssignmentId && (() => {
+                const assn = assignments.find(a => a.id === deleteConfirmAssignmentId);
+                return (
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9700, padding: '20px' }}>
+                        <div style={{ background: 'var(--bg-card)', padding: '30px 24px', borderRadius: '28px', width: '100%', maxWidth: '360px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)', textAlign: 'center', animation: 'scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+                            <div style={{ width: '60px', height: '60px', background: 'linear-gradient(135deg, #f87171, #dc2626)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', color: 'white' }}>
+                                <Trash2 size={28} />
+                            </div>
+                            <h3 style={{ fontSize: '1.2rem', fontWeight: 900, margin: '0 0 8px', color: 'var(--text-main)' }}>課題を削除しますか？</h3>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '6px', lineHeight: 1.5 }}>
+                                「<span style={{ fontWeight: 800, color: 'var(--text-main)' }}>{assn?.title}</span>」を削除します。
+                            </p>
+                            <p style={{ color: 'var(--danger)', fontSize: '0.8rem', marginBottom: '24px', fontWeight: 600 }}>この操作は取り消せません。</p>
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <button onClick={() => setDeleteConfirmAssignmentId(null)} style={{ flex: 1, padding: '14px', borderRadius: '14px', background: 'var(--bg-main)', border: '1px solid var(--border-light)', color: 'var(--text-muted)', fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem' }}>キャンセル</button>
+                                <button onClick={() => { deleteAssignment(deleteConfirmAssignmentId); setDeleteConfirmAssignmentId(null); }} style={{ flex: 1, padding: '14px', borderRadius: '14px', background: 'var(--danger)', color: 'white', border: 'none', fontWeight: 800, cursor: 'pointer', fontSize: '0.95rem', boxShadow: '0 8px 15px -3px rgba(220,38,38,0.35)' }}>削除する</button>
+                            </div>
+                        </div>
+                        <style>{`@keyframes scaleUp { from { opacity:0; transform:scale(0.94) translateY(8px); } to { opacity:1; transform:scale(1) translateY(0); } }`}</style>
+                    </div>
+                );
+            })()}
+
             {/* Monday Goal Update Popup */}
             {/* Class Edit Modal */}
+
             {editingClass && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(5px)', zIndex: 9600, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0' }}
                     onClick={(e) => { if (e.target === e.currentTarget) setEditingClass(null); }}
