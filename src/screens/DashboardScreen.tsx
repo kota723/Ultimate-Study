@@ -831,7 +831,7 @@ const DashboardScreen: React.FC = () => {
                     <button
                         onClick={() => setShowAssignmentList(!showAssignmentList)}
                         className="btn"
-                        style={{ width: '100%', justifyContent: 'space-between', background: 'white', border: '1px solid var(--border-light)', padding: '14px 16px', borderRadius: '18px', color: 'var(--text-main)' }}
+                        style={{ width: '100%', justifyContent: 'space-between', background: 'var(--bg-card)', border: '1px solid var(--border-light)', padding: '14px 16px', borderRadius: '18px', color: 'var(--text-main)' }}
                     >
                         <div className="flex-row" style={{ gap: '10px' }}>
                             <ClipboardList size={20} color="var(--secondary)" />
@@ -854,7 +854,7 @@ const DashboardScreen: React.FC = () => {
                     {showAssignmentList && (
                         <div className="flex-col" style={{ gap: '10px', marginTop: '10px', padding: '4px' }}>
                             {showAddAssignment && (
-                                <div className="card flex-col" style={{ padding: '16px', background: '#f8fafc', border: '1px solid var(--primary)', borderRadius: '20px', gap: '10px' }}>
+                                <div className="card flex-col" style={{ padding: '16px', background: 'var(--bg-card)', border: '1px solid var(--primary)', borderRadius: '20px', gap: '10px' }}>
                                     <div className="row-between">
                                         <h4 style={{ margin: 0, fontWeight: 800 }}>課題を追加</h4>
                                         <button onClick={() => setShowAddAssignment(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem' }}>×</button>
