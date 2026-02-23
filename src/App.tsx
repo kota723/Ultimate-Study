@@ -12,22 +12,30 @@ import NotificationHandler from './NotificationHandler';
 const logoImg = '/logo.png';
 
 function App() {
-  const { activeTab, setActiveTab, followRequests, user, userProfile, signIn, sendFollowRequest } = useAppContext();
+  const { activeTab, setActiveTab, followRequests, user, userProfile, signIn, sendFollowRequest, joinGroupById } = useAppContext();
 
   useEffect(() => {
     if (user && userProfile) {
       const urlParams = new URLSearchParams(window.location.search);
       const addId = urlParams.get('add');
+      const groupId = urlParams.get('group');
 
       if (addId && addId !== user.uid) {
-        // Delay slightly so that userProfile and contexts are completely mounted
         setTimeout(() => {
           if (confirm('友達追加の招待を受け取りました！フォローリクエストを送信しますか？')) {
             sendFollowRequest(addId);
             setActiveTab('social');
             alert('友達リクエストを送信しました！SNSタブから確認できます。');
           }
-          // Remove query param to prevent loop
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }, 800);
+      } else if (groupId) {
+        setTimeout(async () => {
+          const success = await joinGroupById(groupId);
+          if (success) {
+            setActiveTab('social');
+            alert('グループに参加しました！');
+          }
           window.history.replaceState({}, document.title, window.location.pathname);
         }, 800);
       } else if (addId === user.uid) {
@@ -98,14 +106,11 @@ function App() {
 
         <style>{`
             .login-screen-v2 {
-                min-height: 100dvh;
-                height: 100dvh;
-                max-height: 100dvh;
-                width: 100vw;
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
                 background-color: #ffffff;
                 color: #0f172a;
                 font-family: 'Outfit', sans-serif;
-                position: relative;
                 overflow-x: hidden;
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
@@ -304,6 +309,54 @@ function App() {
                 background: #ffffff;
                 box-shadow: 0 20px 40px rgba(0,0,0,0.05);
                 border-color: #cbd5e1;
+            }
+
+            .feature-card:hover .icon-box {
+                transform: scale(1.1) rotate(5deg);
+            }
+
+            @media (max-width: 768px) {
+                .login-header {
+                    padding: 24px 20px;
+                }
+                .pulse-logo {
+                    width: 40px; height: 40px;
+                }
+                .hero-section {
+                    margin-top: 10px;
+                    margin-bottom: 30px;
+                }
+                .hero-title {
+                    font-size: 2.2rem;
+                    margin-bottom: 16px;
+                }
+                .hero-subtitle {
+                    font-size: 0.95rem;
+                    margin-bottom: 24px;
+                }
+                .feature-grid {
+                    grid-template-columns: 1fr;
+                    gap: 12px;
+                    margin-top: 10px;
+                    padding-bottom: 80px; /* space for scrolling */
+                }
+                .feature-card {
+                    padding: 16px;
+                    display: flex;
+                    align-items: center;
+                    text-align: left;
+                    gap: 16px;
+                }
+                .feature-card .icon-box {
+                    margin-bottom: 0;
+                    width: 40px;
+                    height: 40px;
+                    flex-shrink: 0;
+                }
+                .google-login-btn {
+                    width: 100%;
+                    justify-content: center;
+                }
             }
 
             .icon-box {

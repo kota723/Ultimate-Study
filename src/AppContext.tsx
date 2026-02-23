@@ -37,6 +37,7 @@ interface AppState {
     inviteToGroup: (groupId: string, groupName: string, receiverId: string) => Promise<void>;
     acceptGroupInvitation: (invitation: GroupInvitation) => Promise<void>;
     declineGroupInvitation: (id: string) => Promise<void>;
+    joinGroupById: (groupId: string) => Promise<boolean>;
 
     addStudyLog: (log: Omit<StudyLog, 'id' | 'createdAt' | 'userId' | 'userName' | 'userPhoto'>) => void;
     updateStudyLog: (id: string, updates: Partial<StudyLog>) => void;
@@ -396,6 +397,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     };
 
+    const joinGroupById = async (groupId: string): Promise<boolean> => {
+        if (!user) return false;
+        try {
+            const groupRef = doc(db, 'groups', groupId);
+            const groupSnap = await getDoc(groupRef);
+            if (groupSnap.exists()) {
+                const groupData = groupSnap.data();
+                if (confirm(`グループ「${groupData.name}」に参加しますか？`)) {
+                    if (!(groupData.members || []).includes(user.uid)) {
+                        await updateDoc(groupRef, {
+                            members: [...(groupData.members || []), user.uid]
+                        });
+                    }
+                    return true;
+                }
+            } else {
+                alert('グループが見つかりませんでした。');
+            }
+        } catch (error: any) {
+            alert('参加に失敗しました: ' + error.message);
+        }
+        return false;
+    };
+
     const startGlobalTimer = (subject: string) => {
         setTimerState({ active: true, seconds: 0, subject, startTime: Date.now() });
         updateStatus('studying', subject);
@@ -669,7 +694,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         <AppContext.Provider value={{
             activeTab, setActiveTab, user, signIn, signOut,
             userProfile, updateProfile, friends, followRequests,
-            groups, groupInvitations, createGroup, inviteToGroup, acceptGroupInvitation, declineGroupInvitation,
+            groups, groupInvitations, createGroup, inviteToGroup, acceptGroupInvitation, declineGroupInvitation, joinGroupById,
             sendFollowRequest, acceptFollowRequest, declineFollowRequest, updateStatus,
             studyLogs, schedules, goals, examEvents, books, categories, classSchedules, assignments, notifications,
             addStudyLog, updateStudyLog, deleteStudyLog, addLikeToLog, addCommentToLog, clearNotification,
