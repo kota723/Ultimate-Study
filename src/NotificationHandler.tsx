@@ -12,7 +12,6 @@ const NotificationHandler: React.FC = () => {
             const now = new Date();
             const hour = now.getHours();
             const todayStr = format(now, 'yyyy-MM-dd');
-            const tomorrowStr = format(addDays(now, 1), 'yyyy-MM-dd');
 
             const newNotifications: { id: string; msg: string; type: 'info' | 'warning' | 'like' | 'comment' }[] = [];
 

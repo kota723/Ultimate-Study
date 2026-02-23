@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Home, Calendar as CalendarIcon, Clock, BarChart2, Users, Layout, Zap, ArrowRight, ShieldCheck, Globe } from 'lucide-react';
 import { useAppContext } from './AppContext';
 import DashboardScreen from './screens/DashboardScreen';

@@ -3,7 +3,7 @@ import { useAppContext } from '../AppContext';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { BookOpen, Target, Settings, School as SchoolIcon, Layout, Trash2, Save, ChevronUp, Plus, ClipboardList, Calendar as CalendarIcon, CheckCircle2, Circle, Edit3, Wand2 } from 'lucide-react';
 import { format, startOfWeek, subWeeks } from 'date-fns';
-import type { ScheduleType, School, SchoolProgram, ExamSubject, ExamEvent } from '../types';
+import type { ScheduleType, School, SchoolProgram, ExamSubject } from '../types';
 
 const DashboardScreen: React.FC = () => {
     const {
