@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Home, Calendar as CalendarIcon, Clock, BarChart2, Users, Layout, Zap, ArrowRight, ShieldCheck, Globe } from 'lucide-react';
 import { useAppContext } from './AppContext';
 import DashboardScreen from './screens/DashboardScreen';
@@ -12,7 +12,10 @@ import NotificationHandler from './NotificationHandler';
 const logoImg = '/logo.png';
 
 function App() {
-  const { activeTab, setActiveTab, followRequests, user, userProfile, signIn, sendFollowRequest, joinGroupById } = useAppContext();
+  const { activeTab, setActiveTab, followRequests, user, userProfile, signIn, sendFollowRequest, joinGroupById, getGroupInfo } = useAppContext();
+
+  const [pendingJoinGroup, setPendingJoinGroup] = useState<{ id: string, name: string } | null>(null);
+  const [pendingAddFriend, setPendingAddFriend] = useState<string | null>(null);
 
   useEffect(() => {
     if (user && userProfile) {
@@ -22,19 +25,16 @@ function App() {
 
       if (addId && addId !== user.uid) {
         setTimeout(() => {
-          if (confirm('友達追加の招待を受け取りました！フォローリクエストを送信しますか？')) {
-            sendFollowRequest(addId);
-            setActiveTab('social');
-            alert('友達リクエストを送信しました！SNSタブから確認できます。');
-          }
+          setPendingAddFriend(addId);
           window.history.replaceState({}, document.title, window.location.pathname);
         }, 800);
       } else if (groupId) {
         setTimeout(async () => {
-          const success = await joinGroupById(groupId);
-          if (success) {
-            setActiveTab('social');
-            alert('グループに参加しました！');
+          const info = await getGroupInfo(groupId);
+          if (info) {
+            setPendingJoinGroup({ id: groupId, name: info.name });
+          } else {
+            alert('グループが見つかりませんでした。');
           }
           window.history.replaceState({}, document.title, window.location.pathname);
         }, 800);
@@ -469,6 +469,59 @@ function App() {
           </button>
         ))}
       </nav>
+
+      {/* Styled Modals for URL Invitations */}
+      {(pendingJoinGroup || pendingAddFriend) && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+          <div style={{ background: 'var(--bg-card)', padding: '30px 24px', borderRadius: '24px', width: '100%', maxWidth: '400px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', textAlign: 'center', animation: 'scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+
+            {pendingJoinGroup && (
+              <>
+                <div style={{ width: '64px', height: '64px', background: 'linear-gradient(135deg, #4f46e5 0%, #ec4899 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto', color: 'white' }}>
+                  <Users size={32} />
+                </div>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '10px', color: 'var(--text-main)' }}>グループ招待</h3>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '24px', lineHeight: 1.6 }}>「<span style={{ fontWeight: 800, color: 'var(--primary)' }}>{pendingJoinGroup.name}</span>」から招待が届いています。<br />グループに参加しますか？</p>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button onClick={() => setPendingJoinGroup(null)} style={{ flex: 1, padding: '14px', borderRadius: '14px', background: 'var(--bg-main)', border: '1px solid var(--border-light)', color: 'var(--text-muted)', fontWeight: 600, cursor: 'pointer' }}>キャンセル</button>
+                  <button onClick={async () => {
+                    await joinGroupById(pendingJoinGroup.id, true);
+                    setPendingJoinGroup(null);
+                    setActiveTab('social');
+                    alert('グループに参加しました！');
+                  }} style={{ flex: 1, padding: '14px', borderRadius: '14px', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer', boxShadow: '0 10px 15px -3px rgba(79, 70, 229, 0.3)' }}>参加する</button>
+                </div>
+              </>
+            )}
+
+            {pendingAddFriend && (
+              <>
+                <div style={{ width: '64px', height: '64px', background: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto', color: 'white' }}>
+                  <Users size={32} />
+                </div>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '10px', color: 'var(--text-main)' }}>友達追加の招待</h3>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '24px', lineHeight: 1.6 }}>友達追加機能のリンクを開きました。<br />フォローリクエストを送信しますか？</p>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button onClick={() => setPendingAddFriend(null)} style={{ flex: 1, padding: '14px', borderRadius: '14px', background: 'var(--bg-main)', border: '1px solid var(--border-light)', color: 'var(--text-muted)', fontWeight: 600, cursor: 'pointer' }}>キャンセル</button>
+                  <button onClick={() => {
+                    sendFollowRequest(pendingAddFriend);
+                    setPendingAddFriend(null);
+                    setActiveTab('social');
+                    alert('友達リクエストを送信しました！SNSタブから確認できます。');
+                  }} style={{ flex: 1, padding: '14px', borderRadius: '14px', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer', boxShadow: '0 10px 15px -3px rgba(79, 70, 229, 0.3)' }}>リクエスト送信</button>
+                </div>
+              </>
+            )}
+
+          </div>
+          <style>{`
+            @keyframes scaleUp {
+              from { opacity: 0; transform: scale(0.95) translateY(10px); }
+              to { opacity: 1; transform: scale(1) translateY(0); }
+            }
+          `}</style>
+        </div>
+      )}
     </div>
   );
 }

@@ -12,7 +12,7 @@ const SocialScreen: React.FC = () => {
         groups, groupInvitations, createGroup, inviteToGroup,
         acceptGroupInvitation, declineGroupInvitation,
         fetchUserLogs, fetchUserProfiles, updateGroup,
-        addLikeToLog, addCommentToLog, studyLogs
+        addLikeToLog, addCommentToLog, studyLogs, leaveGroup
     } = useAppContext();
 
     const GROUP_COLORS = ['#4f46e5', '#ec4899', '#14b8a6', '#f59e0b', '#dc2626', '#8b5cf6', '#10b981', '#334155'];
@@ -28,6 +28,8 @@ const SocialScreen: React.FC = () => {
     const [editGroupName, setEditGroupName] = useState('');
     const [editGroupColor, setEditGroupColor] = useState('');
     const [editGroupEmoji, setEditGroupEmoji] = useState('');
+
+    const [showLeaveGroupModal, setShowLeaveGroupModal] = useState(false);
 
     const [timelineLogs, setTimelineLogs] = useState<StudyLog[]>([]);
     const [isTimelineLoading, setIsTimelineLoading] = useState(true);
@@ -106,6 +108,15 @@ const SocialScreen: React.FC = () => {
             iconEmoji: editGroupEmoji
         });
         setShowGroupSettings(false);
+    };
+
+    const handleLeaveGroup = async () => {
+        if (!selectedGroupId) return;
+        await leaveGroup(selectedGroupId);
+        setShowLeaveGroupModal(false);
+        setShowGroupSettings(false);
+        setSelectedGroupId(null);
+        alert('グループから退出しました。');
     };
 
     const handleViewProfile = async (userId: string) => {
@@ -725,6 +736,7 @@ const SocialScreen: React.FC = () => {
                                 </div>
                             </div>
                             <button className="btn btn-primary" onClick={handleSaveGroupSettings} style={{ padding: '18px', borderRadius: '18px', fontSize: '1.1rem', fontWeight: 800 }}>設定を保存する</button>
+                            <button className="btn" onClick={() => setShowLeaveGroupModal(true)} style={{ padding: '18px', borderRadius: '18px', fontSize: '1rem', fontWeight: 700, background: 'var(--danger)20', color: 'var(--danger)', border: '1px solid var(--danger)40', marginTop: '12px' }}>グループから退出する</button>
                         </div>
                     </div>
                 )
@@ -755,6 +767,25 @@ const SocialScreen: React.FC = () => {
                                 </div>
                             </div>
                             <button className="btn btn-primary" onClick={handleInviteMore} disabled={selectedFriendIds.length === 0} style={{ padding: '18px', borderRadius: '18px', fontSize: '1.1rem', fontWeight: 800 }}>選択した友達を招待</button>
+                        </div>
+                    </div>
+                )
+            }
+            {/* Leave Group Styled Modal */}
+            {
+                showLeaveGroupModal && (
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+                        <div style={{ background: 'var(--bg-card)', padding: '30px 24px', borderRadius: '24px', width: '100%', maxWidth: '380px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)', textAlign: 'center', animation: 'scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+                            <div style={{ width: '64px', height: '64px', background: 'linear-gradient(135deg, #f87171 0%, #dc2626 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto', color: 'white' }}>
+                                <Users size={32} />
+                            </div>
+                            <h3 style={{ fontSize: '1.3rem', fontWeight: 900, marginBottom: '10px', color: 'var(--text-main)' }}>グループから退出</h3>
+                            <p style={{ color: 'var(--text-muted)', marginBottom: '24px', lineHeight: 1.6, fontSize: '0.95rem' }}>本当に「<span style={{ fontWeight: 800, color: 'var(--danger)' }}>{groups.find(g => g.id === selectedGroupId)?.name}</span>」から退出しますか？<br />※過去の学習記録やメッセージのやり取りは見られなくなります。</p>
+
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <button onClick={() => setShowLeaveGroupModal(false)} style={{ flex: 1, padding: '14px', borderRadius: '14px', background: 'var(--bg-main)', border: '1px solid var(--border-light)', color: 'var(--text-muted)', fontWeight: 700, cursor: 'pointer' }}>キャンセル</button>
+                                <button onClick={handleLeaveGroup} style={{ flex: 1, padding: '14px', borderRadius: '14px', background: 'var(--danger)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', boxShadow: '0 10px 15px -3px rgba(220, 38, 38, 0.3)' }}>退出する</button>
+                            </div>
                         </div>
                     </div>
                 )

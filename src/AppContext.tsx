@@ -37,7 +37,9 @@ interface AppState {
     inviteToGroup: (groupId: string, groupName: string, receiverId: string) => Promise<void>;
     acceptGroupInvitation: (invitation: GroupInvitation) => Promise<void>;
     declineGroupInvitation: (id: string) => Promise<void>;
-    joinGroupById: (groupId: string) => Promise<boolean>;
+    joinGroupById: (groupId: string, skipConfirm?: boolean) => Promise<boolean>;
+    leaveGroup: (groupId: string) => Promise<void>;
+    getGroupInfo: (groupId: string) => Promise<{ name: string } | null>;
 
     addStudyLog: (log: Omit<StudyLog, 'id' | 'createdAt' | 'userId' | 'userName' | 'userPhoto'>) => void;
     updateStudyLog: (id: string, updates: Partial<StudyLog>) => void;
@@ -397,14 +399,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     };
 
-    const joinGroupById = async (groupId: string): Promise<boolean> => {
+    const getGroupInfo = async (groupId: string) => {
+        try {
+            const groupRef = doc(db, 'groups', groupId);
+            const groupSnap = await getDoc(groupRef);
+            if (groupSnap.exists()) {
+                return { name: groupSnap.data().name as string };
+            }
+        } catch (error) {
+            console.error(error);
+        }
+        return null;
+    };
+
+    const joinGroupById = async (groupId: string, skipConfirm?: boolean): Promise<boolean> => {
         if (!user) return false;
         try {
             const groupRef = doc(db, 'groups', groupId);
             const groupSnap = await getDoc(groupRef);
             if (groupSnap.exists()) {
                 const groupData = groupSnap.data();
-                if (confirm(`グループ「${groupData.name}」に参加しますか？`)) {
+                if (skipConfirm || confirm(`グループ「${groupData.name}」に参加しますか？`)) {
                     if (!(groupData.members || []).includes(user.uid)) {
                         await updateDoc(groupRef, {
                             members: [...(groupData.members || []), user.uid]
@@ -419,6 +434,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             alert('参加に失敗しました: ' + error.message);
         }
         return false;
+    };
+
+    const leaveGroup = async (groupId: string) => {
+        if (!user) return;
+        try {
+            const groupRef = doc(db, 'groups', groupId);
+            const groupSnap = await getDoc(groupRef);
+            if (groupSnap.exists()) {
+                const groupData = groupSnap.data();
+                const newMembers = (groupData.members || []).filter((id: string) => id !== user.uid);
+                await updateDoc(groupRef, { members: newMembers });
+            }
+        } catch (error: any) {
+            alert('退出に失敗しました: ' + error.message);
+        }
     };
 
     const startGlobalTimer = (subject: string) => {
@@ -694,7 +724,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         <AppContext.Provider value={{
             activeTab, setActiveTab, user, signIn, signOut,
             userProfile, updateProfile, friends, followRequests,
-            groups, groupInvitations, createGroup, inviteToGroup, acceptGroupInvitation, declineGroupInvitation, joinGroupById,
+            groups, groupInvitations, createGroup, inviteToGroup, acceptGroupInvitation, declineGroupInvitation, joinGroupById, leaveGroup, getGroupInfo,
             sendFollowRequest, acceptFollowRequest, declineFollowRequest, updateStatus,
             studyLogs, schedules, goals, examEvents, books, categories, classSchedules, assignments, notifications,
             addStudyLog, updateStudyLog, deleteStudyLog, addLikeToLog, addCommentToLog, clearNotification,
